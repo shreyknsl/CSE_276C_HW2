@@ -11,47 +11,6 @@ def downsample_data(data_, alpha_):
     downsampled_data_ = data_[::alpha_]
     return downsampled_data_
 
-# def linear_interpolate(orig_data_, int_data_):
-#     wp = []
-#     alpha_ = round(orig_data_.shape[0]/int_data_.shape[0])
-#     for i in range(0, int_data_.shape[0]-1):
-#         wp.append([int_data_[i,0], int_data_[i,1]])
-#         if (int_data_[i+1,0] - int_data_[i,0] != 0):
-#             m = (int_data_[i+1,1] - int_data_[i,1])/(int_data_[i+1,0] - int_data_[i,0])
-#             ct = 1
-#             while ((ct < alpha_) and (i + ct < int_data_.shape[0])):            
-#                 y = int_data_[i,1] + m*(orig_data_[alpha_*(i) + ct,0] - int_data_[i,0])
-#                 wp.append([orig_data_[alpha_*(i) + ct,0], y])
-#                 ct += 1
-#         else:
-#             wp.append([int_data_[i,0],int_data_[i,1]])
-#             wp.append([int_data_[i+1,0],int_data_[i+1,1]])
-#     wp.append([int_data_[-1,0], int_data_[-1,1]])
-
-#     return np.array(wp)   
-
-# def quadratic_interpolation(orig_data_, int_data_):
-#     wp = []
-#     alpha_ = round(orig_data_.shape[0] / int_data_.shape[0])
-
-#     for i in range(0, int_data_.shape[0]-2,2):
-#         ct = 1
-#         # flag = 0
-#         wp.append([int_data_[i,0], int_data_[i,1]])
-#         while(ct < 6):
-#             if ct == 3:
-#                 wp.append([int_data_[i,0], int_data_[i,1]])
-#                 ct = 4
-#             if ((int_data_[i,0] - int_data_[i+1,0] != 0) and (int_data_[i,0] - int_data_[i+2,0] != 0) and (int_data_[i+2,0] - int_data_[i+1,0] != 0)):
-#                 L0 = ((orig_data_[alpha_*(i) + ct,0] - int_data_[i+1,0])*(orig_data_[alpha_*(i) + ct,0] - int_data_[i+2,0]))/((int_data_[i,0] - int_data_[i+1,0])*(int_data_[i,0] - int_data_[i+2,0]))
-#                 L1 = ((orig_data_[alpha_*(i) + ct,0] - int_data_[i,0])*(orig_data_[alpha_*(i) + ct,0] - int_data_[i+2,0]))/((int_data_[i+1,0] - int_data_[i,0])*(int_data_[i+1,0] - int_data_[i+2,0]))
-#                 L2 = ((orig_data_[alpha_*(i) + ct,0] - int_data_[i,0])*(orig_data_[alpha_*(i) + ct,0] - int_data_[i+1,0]))/((int_data_[i+2,0] - int_data_[i,0])*(int_data_[i+2,0] - int_data_[i+1,0]))
-#                 y = L0*int_data_[i,1] + L1*int_data_[i+1,1] + L2*int_data_[i+2,1]
-#                 wp.append([orig_data_[alpha_*(i) + ct,0], y])
-            
-#             ct += 1
-#     print(len(wp))
-#     return np.array(wp)
 
 def lin_int(orig_data_, int_data_):
     wp = []
@@ -100,130 +59,6 @@ def quad_int(orig_data_, int_data_):
     return  np.array(wp)
 
 def cub_int(orig_data_, int_data_):
-    wp  =[]
-    alpha_ = round(orig_data_.shape[0] / int_data_.shape[0])    
-
-    n = int_data_.shape[0]
-    p = n - 1
-    Y = np.zeros((4*p,1))
-    M = np.zeros((4*p, 4*p))
-
-    # Fixing the 0th and (2p-1)th elements
-    # Y[0,:] = int_data_[0,1]
-    # Y[2*p - 1,:] = int_data_[-1,1]
-    
-    M[0,0] = 0
-    M[0,1] = 0
-    M[0,2] = 0
-    M[0,3] = 1
-    M[2*p - 1,4*p - 4] = (alpha_*p)**3
-    M[2*p - 1,4*p - 3] = (alpha_*p)**2
-    M[2*p - 1,4*p - 2] = (alpha_*p)
-    M[2*p - 1,4*p - 1] = 1
-
-    for i in range(1,p):
-
-        # Feeding the M matrix of shape (4*n, 4*n). Unfilled cells will be 0s.
-        t = alpha_*i
-        M[2*i-1,4*i-4] = (alpha_*i)**3
-        M[2*i,4*i] = (alpha_*i)**3
-        
-        M[2*i-1,4*i-3] = (alpha_*i)**2
-        M[2*i,4*i+1] = (alpha_*i)**2
-        
-        M[2*i-1,4*i-2] = (alpha_*i)
-        M[2*i,4*i+2] = (alpha_*i)
-        
-        M[2*i-1,4*i-1] = 1
-        M[2*i,4*i+3] = 1   
-
-        # First differential coefficients
-        M[2*p + i - 1, 4*i - 4] = 3*((alpha_*i)**2)
-        M[2*p + i - 1, 4*i - 3] = 2*(alpha_*i)
-        M[2*p + i - 1, 4*i - 2] = 1
-        M[2*p + i - 1, 4*i] = -3*((alpha_*i)**2)
-        M[2*p + i - 1, 4*i + 1] = -2*(alpha_*i)
-        M[2*p + i - 1, 4*i + 2] = -1
-
-        # Second differential coefficients
-        M[3*p + i - 2, 4*i - 4] = 6*(alpha_*i)
-        M[3*p + i - 2, 4*i - 3] = 2
-        M[3*p + i - 2, 4*i] = -6*(alpha_*i)
-        M[3*p + i - 2, 4*i + 1] = -2       
-
-    # Boundary conditions
-    M[4*p-2, 0] = 0
-    M[4*p-2, 1] = 2
-    M[4*p-1, 4*p-4] = 6*(alpha_*p)
-    M[4*p-1, 4*p-1] = 2
-
-    print(np.linalg.det(M))
-
-    print(np.linalg.det(np.linalg.inv(M)))
-
-    return
-
-def cubic_interpolation(orig_data_, int_data_):
-    n = int_data_.shape[0]
-    p = n - 1
-    Y = np.zeros((4*p,1))
-    M = np.zeros((4*p, 4*p))
-
-    # Fixing the 0th and (2p-1)th elements
-    Y[0,:] = int_data_[0,1]
-    Y[2*p - 1,:] = int_data_[-1,1]
-    
-    M[0,0] = int_data_[0,0]**3
-    M[0,1] = int_data_[0,0]**2
-    M[0,2] = int_data_[0,0]
-    M[0,3] = 1
-    M[2*p - 1,4*p - 4] = int_data_[-1,0]**3
-    M[2*p - 1,4*p - 3] = int_data_[-1,0]**2
-    M[2*p - 1,4*p - 2] = int_data_[-1,0]
-    M[2*p - 1,4*p - 1] = 1
-
-    for i in range(1, p):
-
-        # Feeding the Y vector of shape (4*n,1). Unfilled cells will be 0s.
-        Y[2*i - 1 : 2*i + 1,:] = int_data_[i,1]
-        # Feeding the M matrix of shape (4*n, 4*n). Unfilled cells will be 0s.
-        M[2*i-1,4*i-4] = int_data_[i,0]**3
-        M[2*i,4*i] = int_data_[i,0]**3
-        
-        M[2*i-1,4*i-3] = int_data_[i,0]**2
-        M[2*i,4*i+1] = int_data_[i,0]**2
-        
-        M[2*i-1,4*i-2] = int_data_[i,0]
-        M[2*i,4*i+2] = int_data_[i,0]
-        
-        M[2*i-1,4*i-1] = 1
-        M[2*i,4*i+3] = 1
-
-        # First differential coefficients
-        M[2*p + i - 1, 4*i - 4] = 3*(int_data_[i,0]**2)
-        M[2*p + i - 1, 4*i - 3] = 2*int_data_[i,0]
-        M[2*p + i - 1, 4*i - 2] = 1
-        M[2*p + i - 1, 4*i] = -3*(int_data_[i,0]**2)
-        M[2*p + i - 1, 4*i + 1] = -2*int_data_[i,0]
-        M[2*p + i - 1, 4*i + 2] = -1
-
-        # Second differential coefficients
-        M[3*p + i - 2, 4*i - 4] = 6*int_data_[i,0]
-        M[3*p + i - 2, 4*i - 3] = 2
-        M[3*p + i - 2, 4*i] = -6*int_data_[i,0]
-        M[3*p + i - 2, 4*i + 1] = -2
-
-    # Boundary conditions
-    M[4*p-2, 0] = 6*int_data_[0,0]
-    M[4*p-2, 1] = 2
-    M[4*p-1, 4*p-4] = 6*int_data_[-1,0]
-    M[4*p-1, 4*p-1] = 2
-
-    # print(np.linalg.det(M))
-
-    return #np.linalg.pinv(M) @ Y
-
-def ci(orig_data_, int_data_):
 
     alpha_ = round(orig_data_.shape[0]/int_data_.shape[0])
     n = int_data_.shape[0] - 1
@@ -335,9 +170,9 @@ if __name__ == "__main__":
     plot_data(quad_p2hz, 150)
 
     ## CUBIC INTERPOLATION
-    cub_10hz = ci(waypoints, data_10hz)
-    cub_01hz = ci(waypoints, data_01hz)
-    cub_p2hz = ci(waypoints, data_p2hz)
+    cub_10hz = cub_int(waypoints, data_10hz)
+    cub_01hz = cub_int(waypoints, data_01hz)
+    cub_p2hz = cub_int(waypoints, data_p2hz)
     print(get_error(waypoints, cub_10hz))
     print(get_error(waypoints, cub_01hz))
     print(get_error(waypoints, cub_p2hz))
