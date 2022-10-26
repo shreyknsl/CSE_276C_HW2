@@ -10,7 +10,7 @@
 \usepackage[noend]{algpseudocode}			        % necessary for algorithmicx
 \usepackage{graphicx}
 \usepackage{mathtools}                              % short insert text
-
+\usepackage{multirow}
 \usepackage{subcaption}
 \usepackage{tikz}      % plot finite state machine for MDP transition graph
 \usetikzlibrary{automata, positioning, arrows.meta} % tikz package dependency
@@ -68,8 +68,97 @@
 
 \subsection*{Problems}
 \begin{enumerate}[leftmargin=*,itemsep=9ex]
-  \item Problem 1: \\
-  Hello
+  \item Problem 1:
+  \begin{enumerate}[1., itemsep=5ex]
+    \item Ground Truth trajectory:
+    \begin{center}
+      \includegraphics[scale = 0.7]{fig/gt.png}
+    \end{center}
+    \item Interpolation
+    For computing the interpolation, we assume that the downsampled data $\{x,y\} = f(t)$, i.e., the points are equally spaced in time.
+    The formulae and methods are taken from the lecture notes. Python implementation is attached as $\tt{main.py}$ file.
+    \begin{enumerate}[itemsep=5ex]
+      \item Linear Interpolation:
+      \begin{center}
+        \includegraphics[width=0.32\linewidth]{fig/lin_10.png}
+        \includegraphics[width=0.32\linewidth]{fig/lin_01.png}
+        \includegraphics[width=0.32\linewidth]{fig/lin_P2.png}
+      \end{center}
+      Linear Interpolation Error:
+      \begin{center}
+        \begin{tabular}{ |c|c|c|c| } 
+        \hline
+        \bf{Downsample freq.} & \bf{Euclidean norm error} \\
+        \hline
+        10Hz & 45.77 \\ 
+        01Hz & 1486.57\\ 
+        0.2Hz& 23702.15\\ 
+        \hline
+        \end{tabular}
+      \end{center}
+      
+      \item Quadratic Interpolation:
+      \begin{center}
+        \includegraphics[width=0.32\linewidth]{fig/quad_10.png}
+        \includegraphics[width=0.32\linewidth]{fig/quad_01.png}
+        \includegraphics[width=0.32\linewidth]{fig/quad_p2.png}
+      \end{center}
+      Quadratic Interpolation Error:
+      \begin{center}
+        \begin{tabular}{ |c|c|c|c| } 
+        \hline
+        \bf{Downsample freq.} & \bf{Euclidean norm error} \\
+        \hline
+        10Hz & 46.42 \\ 
+        01Hz & 876.68\\ 
+        0.2Hz& 21672.22\\ 
+        \hline
+        \end{tabular}
+      \end{center}
+      \item Cubic Spline Interpolation:
+      \begin{center}
+        \includegraphics[width=0.32\linewidth]{fig/cub_10.png}
+        \includegraphics[width=0.32\linewidth]{fig/cub_01.png}
+        \includegraphics[width=0.32\linewidth]{fig/cub_p2.png}
+      \end{center}
+      Cubic Spline Interpolation Error:
+      \begin{center}
+        \begin{tabular}{ |c|c|c|c| } 
+        \hline
+        \bf{Downsample freq.} & \bf{Euclidean norm error} \\
+        \hline
+        10Hz & 46.27 \\ 
+        01Hz & 463.28\\ 
+        0.2Hz& 17534.76\\ 
+        \hline
+        \end{tabular}
+      \end{center}
+    \end{enumerate}
+    \item For the 10Hz downsampling rate, there is very minute difference between the three types of interpolations (linear, quadratic and cubic spline). All look
+          similar to the ground truth trajectory.
+          
+          As we further downsample our data, we observe that cubic spline interpolation is the most reliable with the least error, unlike linear interpolation.
+          
+          As the above trend continues, the difference between quadratic and cubic spline interpolation is noticeable.
+          
+          The low sample rate of 0.2Hz is most detrimental in case of curvatures where we are not able to capture the continuity of the trajectory. The condition aggravates
+          for linear interpolation.
+
+    \item
+    In linear interpolation, we approximate a function with a straigh line and it performs better if the function has traits, which are linear.
+    
+    In quadratic interpolation, we approximate a function with a quadratic curve and it performs better with functions which have a curvature similar
+    to a 2-degree polynomial; however, there are certain edge cases within the curve, where the function is not differetiable. It makes the changes in
+    the curve abrupt, which should not be the case.
+    
+    Finally, we implement cubic spline interpolation, which allows us to make the curve differentiable and the edge cases are less abrupt.
+    
+    Hence, each interpolation would work better with functions which display similar traits for the given domain and range.
+
+    They differ dramatically in cases of lower sampling rates, as each method interpretes the huge amount of lost information in a different way. With higher
+    sampling rates, we do not see much difference.
+    
+  \end{enumerate}
   \item Problem 2:\\
   Since, we want 6 digit accuracy for the $cos(x)$ function, we say that our maximum error should be $10^{-6}$.\\
   The error is expressed by the following formula:
@@ -129,7 +218,7 @@
     \]
     Substituting $x$ in (2):
     \[
-      10^{-6} \leq \frac{1}{2!}\max|\frac{(x_1 - x_0) + (x_2 - x_0)}{3}\frac{(x_0 - x_1) + (x_2 - x_1)}{3}\frac{(x_0 - x_2) + (x_1 - x_2)}{3}|
+      10^{-6} \leq \frac{1}{3!}\max|\frac{(x_1 - x_0) + (x_2 - x_0)}{3}\frac{(x_0 - x_1) + (x_2 - x_1)}{3}\frac{(x_0 - x_2) + (x_1 - x_2)}{3}|
     \]
     Let $h = x_1 - x_0 = x_2 - x_1$ be the table spacing,
     \[
@@ -148,7 +237,7 @@
       \]
       \item For Quadratic Interpolation:
       \[
-        N = \frac{\pi - 0}{h} = \frac{\pi}{0.0208} \approx 151
+        N = \frac{\pi - 0}{h} = \frac{\pi}{0.0208} \approx 152
       \]      
     \end{enumerate}
   \end{enumerate}
